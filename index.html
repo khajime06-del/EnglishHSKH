@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新英単語学習HSKH</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: sans-serif;
+  color: black;
+  background: linear-gradient(to bottom, white, #b3e5fc);
+}
+
+/* 修正済み */
+.screen {
+  display: none;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  flex-direction: column;
+}
+
+.active {
+  display: flex;
+}
+
+.header {
+  font-size: 24px;
+}
+
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ボタン */
+.button {
+  width: 80%;
+  max-width: 300px;
+  padding: 15px;
+  border: 2px solid blue;
+  border-radius: 15px;
+  background: white;
+  margin: 10px;
+  text-align: center;
+  font-size: 18px;
+}
+
+/* フッター */
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-center {
+  text-align: center;
+  margin-top: 10px;
+}
+
+input {
+  width: 80%;
+  max-width: 300px;
+  padding: 10px;
+  margin: 5px;
+  font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="home" class="screen active">
+  <div class="header">HSKH</div>
+
+  <div class="center">
+    <div class="button" onclick="go('input')">単語入力</div>
+    <div class="button" onclick="go('learnSelect')">単語学習</div>
+  </div>
+
+  <div class="footer-center">筑駒目指して頑張ろう！</div>
+
+  <div class="footer">
+    <div></div>
+    <div>Hajime</div>
+  </div>
+</div>
+
+<div id="input" class="screen">
+  <div class="center">
+    <input id="num" placeholder="単語番号">
+    <input id="eng" placeholder="英単語">
+    <input id="jp" placeholder="日本語訳">
+  </div>
+
+  <div class="footer">
+    <div class="button" onclick="saveWord()">保存</div>
+    <div class="button" onclick="go('home')">ホーム</div>
+  </div>
+</div>
+
+<div id="learnSelect" class="screen">
+  <div class="center">
+    <div class="button" onclick="go('normalSelect')">通常単語学習</div>
+  </div>
+</div>
+
+<div id="normalSelect" class="screen">
+  <div class="center">
+    <input id="start" placeholder="開始番号">
+    <input id="end" placeholder="終了番号">
+    <div class="button" onclick="prepareStudy()">学習開始</div>
+  </div>
+</div>
+
+<div id="study" class="screen">
+  <div class="center">
+    <div id="display">開始ボタンを押してください</div>
+    <div id="startBtn" class="button" onclick="startStudy()">開始</div>
+  </div>
+
+  <div class="footer">
+    <div></div>
+    <div id="nextBtn" class="button" onclick="nextWord()" style="display:none;">次へ</div>
+  </div>
+</div>
+
+<script>
+let words = JSON.parse(localStorage.getItem("words") || "[]");
+let studyList = [];
+let index = 0;
+
+function go(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function saveWord(){
+  const num = document.getElementById("num").value;
+  const eng = document.getElementById("eng").value;
+  const jp = document.getElementById("jp").value;
+
+  if(!num || !eng || !jp) return alert("全部入力してください");
+
+  words.push({num: Number(num), eng, jp});
+  localStorage.setItem("words", JSON.stringify(words));
+
+  alert("保存しました");
+}
+
+function prepareStudy(){
+  const start = Number(document.getElementById("start").value);
+  const end = Number(document.getElementById("end").value);
+
+  studyList = words.filter(w => w.num >= start && w.num <= end);
+  studyList.sort(() => Math.random() - 0.5);
+
+  index = 0;
+  go("study");
+}
+
+function startStudy(){
+  let count = 3;
+  const display = document.getElementById("display");
+  const btn = document.getElementById("startBtn");
+
+  btn.style.display = "none";
+
+  const countdown = setInterval(() => {
+    display.innerText = count;
+    count--;
+    if(count < 0){
+      clearInterval(countdown);
+      showWord();
+    }
+  }, 1000);
+}
+
+function showWord(){
+  if(index >= studyList.length){
+    document.getElementById("display").innerText = "終了！";
+    document.getElementById("nextBtn").innerText = "ホームへ";
+    document.getElementById("nextBtn").onclick = () => go("home");
+    document.getElementById("nextBtn").style.display = "block";
+    return;
+  }
+
+  const word = studyList[index];
+  const display = document.getElementById("display");
+
+  display.innerText = word.eng;
+  document.getElementById("nextBtn").style.display = "none";
+
+  setTimeout(() => {
+    display.innerText = word.jp;
+    document.getElementById("nextBtn").style.display = "block";
+  }, 2000);
+}
+
+function nextWord(){
+  index++;
+  showWord();
+}
+</script>
+
+</body>
+</html>
